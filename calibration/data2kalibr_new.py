@@ -99,7 +99,7 @@ if __name__ == "__main__":
     parser.add_argument('data_dir', type=str, help='Path to folder with video_recording.mp4 and video_meta.pb3')
     parser.add_argument('--result-dir', type=str, help='Path to result folder, default same as proto', default = None)
     parser.add_argument('--tag-size', type=float, help='Tag size for april grid', default = 24e-3)
-    parser.add_argument('--subsample', type=int, help='Take every n-th video frame', default = 1)
+    parser.add_argument('--subsample', type=int, help='Take every n-th video frame', default = 30)
     parser.add_argument('--matlab-calibration', type=str, help='Txt file with matlab camera calibration', default = None)
     parser.add_argument('--kalibr-calibration', type=str, help='YAML file with kalibr camera calibration', default = None)
 
