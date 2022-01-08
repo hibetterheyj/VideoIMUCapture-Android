@@ -73,14 +73,18 @@ video_meta.pb3  video_recording.mp4
 
 - original data is recorded with 3472x4624 pixels
 - expected resolutions
+  - 1280×960 (top choice!)
   - 800x600
   - 640x480
 - resize with `ffmpeg`
   - `sudo apt install ffmpeg -y`
-  - ffmpeg -i input.avi -vf scale="720:-1" output.avi
+  - `ffmpeg -i video_recording_original.mp4 -vf scale=800:640 -c:v libx264 -crf 18 800_640.mp4`
 - rotate 90 degrees counterclockwise
   - https://stackoverflow.com/a/9570992
-  - `ffmpeg -i video_recording_raw.mp4 -vf "transpose=0" -vcodec libx264 video_recording_4624x3472.mp4`
+  - `ffmpeg -i video_recording_original.mp4 -vf "transpose=2" -c:v libx264 -crf 18 -pix_fmt yuv420p video_recording_4624_3472.mp4`
+- two commands together: https://stackoverflow.com/a/56364133/13954301
+  - `ffmpeg -i video_recording_original.mp4 -vf "transpose=2,scale=800:600" -c:v libx264 -crf 18 -pix_fmt yuv420p video_recording_800_600.mp4`
+  - `ffmpeg -i video_recording_original.mp4 -vf "transpose=2,scale=1280:960" -c:v libx264 -crf 18 -pix_fmt yuv420p video_recording.mp4`
 
 
 ## Create calibration bag for calibration
