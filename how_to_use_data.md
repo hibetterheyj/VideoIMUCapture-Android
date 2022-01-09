@@ -102,12 +102,55 @@ calibrate with
 # in docker
 # python data2kalibr_new.py ../data/2022_01_07_23_44_44 --tag-size 0.03 --subsample 30
 python data2kalibr_new.py ../data/2022_01_07_23_44_44 --tag-size 0.03
+# will generate rosbag and basic camera & imu info
+cd ../data/2022_01_07_23_44_44/kalibr
+kalibr_calibrate_cameras --bag kalibr.bag --target target.yaml --models pinhole-radtan --topics /cam0/image_raw
 ```
 
 - output logs
 
 ```plaintext
 ../data/2022_01_07_23_44_44/kalibr/kalibr.bag
+```
+
+- results
+
+Your calibration will end up in `data/2022_01_07_23_44_44/kalibr/kalibr/camchain-kalibr.yaml`.
+
+# Camera IMU calibration
+
+ref: https://github.com/ethz-asl/kalibr/wiki/camera-imu-calibration
+
+> The calibration target is fixed in this calibration and the camera-imu system is moved in front of the target to excite all IMU axes. It is important to ensure good and even illumination of the calibration target and to keep the camera shutter times low to avoid excessive motion blur.
+
+- dataset: 2022_01_08_04_35_04
+
+```shell
+cd calibration
+python data2kalibr_new.py ../data/2022_01_08_04_35_04 --tag-size 0.03 --subsample 3 --kalibr-calibration ../data/2022_01_07_23_44_44/kalibr/camchain-kalibr.yaml
+
+cd ../data/2022_01_08_04_35_04/kalibr
+kalibr_calibrate_imu_camera --target target.yaml --imu imu.yaml --cams camchain.yaml --bag kalibr.bag
+```
+
+will create new kalibr.bag file: `../data/2022_01_08_04_35_04/kalibr/kalibr.bag`
+
+## Convert new data to dataset dir
+
+```shell
+ffprobe ../data/epfl_parking/video_recording.mp4
+...
+Stream #0:0(eng): Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, smpte170m/bt470bg/smpte170m), 3472x4624, 120431 kb/s, SAR 1:1 DAR 217:289, 30.01 fps, 30 tbr, 90k tbn, 180k tbc (default)
+```
+
+- convert mp4 file with calibration data
+
+```shell
+python data2rosbag.py ../data/epfl_parking/ --calibration ../data/2022_01_08_04_35_04/kalibr/camchain-imucam-kalibr.yaml --subsample 10 --resize 960 1280
+
+# take every 10 frames => ~3 FPS
+docker cp ./data2images_new.py c62fe941989d:/calibration/data2images_new.py
+python data2images_new.py ../data/epfl_parking/ --calibration ../data/2022_01_08_04_35_04/kalibr/camchain-imucam-kalibr.yaml --subsample 10 --resize 960 1280
 ```
 
 ## Misc
@@ -119,3 +162,15 @@ chmod +x run_kalibr.sh
 # ./run_kalibr.sh <path-to-data-dir>
 bash ./run_kalibr.sh custom_data
 ```
+
+## pitfalls
+
+- model choice
+> https://github.com/ethz-asl/kalibr/wiki/supported-models
+> https://github.com/ethz-asl/kalibr/blob/master/aslam_offline_calibration/kalibr/python/kalibr_calibrate_rs_cameras
+ `--model pinhole-radtan` instead of `--model pinhole-equi`
+
+because matlab only support radial-tangential distortion model instead of equidistant model
+
+'pinhole-radtan': acvb.DistortedPinhole
+source code: https://github.com/ethz-asl/kalibr/blob/master/aslam_cv/aslam_cameras/src/PinholeCameraGeometry.cpp#L88
